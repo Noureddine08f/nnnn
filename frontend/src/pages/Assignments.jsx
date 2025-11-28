@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { useTranslation } from 'react-i18next';
 import { Plus, Edit, Trash2 } from 'lucide-react';
+import notDoneIcon from '../assets/img/icons/notDone.png';
 
 const Assignments = () => {
   const { t } = useTranslation();
@@ -80,7 +81,10 @@ const Assignments = () => {
 
   return (
     <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">{t('Assignments')}</h2>
+      <div className="flex items-center mb-4">
+        <img src={notDoneIcon} alt="Assignments" className="w-8 h-8 mr-2" />
+        <h2 className="text-2xl font-bold">{t('Assignments')}</h2>
+      </div>
       
       <form onSubmit={handleSubmit} className="mb-8 bg-white p-4 rounded shadow flex flex-wrap gap-4 items-end">
         <div>

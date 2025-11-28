@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { useTranslation } from 'react-i18next';
 import { Plus, Edit, Trash2 } from 'lucide-react';
+import classeIcon from '../assets/img/icons/classe.png';
 
 const Classrooms = () => {
   const { t } = useTranslation();
@@ -60,7 +61,10 @@ const Classrooms = () => {
 
   return (
     <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">{t('Classrooms')}</h2>
+      <div className="flex items-center mb-4">
+        <img src={classeIcon} alt="Classrooms" className="w-8 h-8 mr-2" />
+        <h2 className="text-2xl font-bold">{t('Classrooms')}</h2>
+      </div>
       
       <form onSubmit={handleSubmit} className="mb-8 bg-white p-4 rounded shadow flex flex-wrap gap-4 items-end">
         <div>

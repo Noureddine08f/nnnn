@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { useTranslation } from 'react-i18next';
 import { Plus, Edit, Trash2 } from 'lucide-react';
+import profAvatar from '../assets/img/profs/1.png';
 
 const Teachers = () => {
   const { t } = useTranslation();
@@ -126,7 +127,10 @@ const Teachers = () => {
           <tbody className="bg-white divide-y divide-gray-200">
             {teachers.map((teacher) => (
               <tr key={teacher.id}>
-                <td className="px-6 py-4 whitespace-nowrap">{teacher.name}</td>
+                <td className="px-6 py-4 whitespace-nowrap flex items-center">
+                  <img src={profAvatar} alt="Avatar" className="w-8 h-8 rounded-full mr-2" />
+                  {teacher.name}
+                </td>
                 <td className="px-6 py-4 whitespace-nowrap">{teacher.specialization}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{teacher.max_hours}</td>
                 <td className="px-6 py-4 whitespace-nowrap">

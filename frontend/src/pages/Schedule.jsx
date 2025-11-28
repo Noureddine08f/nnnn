@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { useTranslation } from 'react-i18next';
 import { Calendar, Download, RefreshCw } from 'lucide-react';
+import doneIcon from '../assets/img/icons/done.png';
 
 const Schedule = () => {
   const { t } = useTranslation();
@@ -42,7 +43,10 @@ const Schedule = () => {
   return (
     <div className="p-4">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">{t('Schedule')}</h2>
+        <div className="flex items-center">
+          <img src={doneIcon} alt="Schedule" className="w-8 h-8 mr-2" />
+          <h2 className="text-2xl font-bold">{t('Schedule')}</h2>
+        </div>
         <div className="space-x-2">
           <button 
             onClick={handleGenerate} 
