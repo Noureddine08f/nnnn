@@ -8,8 +8,11 @@ use Illuminate\Http\Request;
 
 class SchoolClassController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        if ($request->has('limit')) {
+            return SchoolClass::latest()->take($request->limit)->get();
+        }
         return SchoolClass::all();
     }
 

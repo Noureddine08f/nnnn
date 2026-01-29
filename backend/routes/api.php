@@ -14,18 +14,27 @@ use App\Http\Controllers\Api\AuthController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
-
-    Route::apiResource('teachers', TeacherController::class);
-    Route::apiResource('classrooms', ClassroomController::class);
-    Route::apiResource('courses', CourseController::class);
-    Route::apiResource('school-classes', SchoolClassController::class);
-    Route::apiResource('time-slots', TimeSlotController::class);
-    Route::apiResource('schedules', ScheduleController::class);
-    Route::apiResource('assignments', AssignmentController::class);
-    Route::post('/schedules/generate', [App\Http\Controllers\Api\SchedulerController::class, 'generate']);
+// User info route removed auth
+Route::get('/user', function (Request $request) {
+    return $request->user();
 });
+
+// Resources without auth
+Route::apiResource('teachers', TeacherController::class);
+Route::apiResource('classrooms', ClassroomController::class);
+Route::apiResource('courses', CourseController::class);
+Route::apiResource('school-classes', SchoolClassController::class);
+Route::apiResource('time-slots', TimeSlotController::class);
+Route::apiResource('schedules', ScheduleController::class);
+Route::apiResource('assignments', AssignmentController::class);
+
+// Scheduler routes without auth
+Route::post('/schedules/generate', [App\Http\Controllers\Api\SchedulerController::class, 'generate']);
+Route::delete('/schedules/clear', [App\Http\Controllers\Api\SchedulerController::class, 'clear']);
+
+// Dashboard stats without auth
+Route::get('/dashboard/stats', [App\Http\Controllers\Api\DashboardController::class, 'stats']);
+
+// Settings without auth
+Route::get('/settings', [App\Http\Controllers\Api\SettingController::class, 'index']);
+Route::post('/settings', [App\Http\Controllers\Api\SettingController::class, 'update']);

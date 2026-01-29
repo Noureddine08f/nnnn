@@ -8,6 +8,7 @@ import Courses from './pages/Courses';
 import Classes from './pages/Classes';
 import Assignments from './pages/Assignments';
 import Schedule from './pages/Schedule';
+import Settings from './pages/Settings';
 import Login from './pages/Login';
 import './i18n';
 
@@ -24,6 +25,7 @@ function App() {
           <Route path="classes" element={<Classes />} />
           <Route path="assignments" element={<Assignments />} />
           <Route path="schedule" element={<Schedule />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
       </Routes>
     </BrowserRouter>

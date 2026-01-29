@@ -1,1 +1,10 @@
 @import "tailwindcss";
+
+@theme {
+  --color-neutral-primary: #ffffff;
+  --color-neutral-secondary-medium: #f3f4f6; /* gray-100 */
+  --color-neutral-tertiary: #d1d5db; /* gray-300 */
+  --color-default: #e5e7eb; /* gray-200 */
+  --color-heading: #111827; /* gray-900 */
+  --radius-base: 0.375rem;
+}
