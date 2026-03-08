@@ -25,12 +25,12 @@ Route::apiResource('classrooms', ClassroomController::class);
 Route::apiResource('courses', CourseController::class);
 Route::apiResource('school-classes', SchoolClassController::class);
 Route::apiResource('time-slots', TimeSlotController::class);
-Route::apiResource('schedules', ScheduleController::class);
-Route::apiResource('assignments', AssignmentController::class);
-
-// Scheduler routes without auth
+// Scheduler routes — must come BEFORE the resource routes
 Route::post('/schedules/generate', [App\Http\Controllers\Api\SchedulerController::class, 'generate']);
 Route::delete('/schedules/clear', [App\Http\Controllers\Api\SchedulerController::class, 'clear']);
+
+Route::apiResource('schedules', ScheduleController::class);
+Route::apiResource('assignments', AssignmentController::class);
 
 // Dashboard stats without auth
 Route::get('/dashboard/stats', [App\Http\Controllers\Api\DashboardController::class, 'stats']);

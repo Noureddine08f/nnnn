@@ -31,7 +31,7 @@ class SchedulerController extends Controller
     }
 
 
-    public function clear()
+  public function clear()
     {
         try {
 
@@ -42,7 +42,12 @@ class SchedulerController extends Controller
             return response()->json([
                 'message' => 'Failed to clear schedule',
                 'error' => $e->getMessage()
-            ], 500);
+        ], 500);
         }
     }
+
+
+
 }
+
+

@@ -20,7 +20,6 @@ class SchoolClassController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'grade_level' => 'required|string|max:255',
         ]);
 
         return SchoolClass::create($validated);
@@ -35,7 +34,6 @@ class SchoolClassController extends Controller
     {
         $validated = $request->validate([
             'name' => 'string|max:255',
-            'grade_level' => 'string|max:255',
         ]);
 
         $schoolClass->update($validated);

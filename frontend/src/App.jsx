@@ -9,6 +9,7 @@ import Classes from './pages/Classes';
 import Assignments from './pages/Assignments';
 import Schedule from './pages/Schedule';
 import Settings from './pages/Settings';
+import TimeSlots from './pages/TimeSlots';
 import Login from './pages/Login';
 import './i18n';
 
@@ -24,6 +25,7 @@ function App() {
           <Route path="courses" element={<Courses />} />
           <Route path="classes" element={<Classes />} />
           <Route path="assignments" element={<Assignments />} />
+          <Route path="time-slots" element={<TimeSlots />} />
           <Route path="schedule" element={<Schedule />} />
           <Route path="settings" element={<Settings />} />
         </Route>

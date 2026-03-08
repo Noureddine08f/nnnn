@@ -40,9 +40,9 @@ class FullCapacitySeeder extends Seeder
         // 3. School Classes (Groups of students). 
         // Each group also has 40h max capacity per week.
         // We need to distribute 54 hours of lessons. So we need at least 2 classes (groups).
-        $sc1 = SchoolClass::create(['name' => 'Grade 10-A', 'grade_level' => '10']);
-        $sc2 = SchoolClass::create(['name' => 'Grade 11-B', 'grade_level' => '11']);
-        $sc3 = SchoolClass::create(['name' => 'Grade 12-C', 'grade_level' => '12']); // Extra buffer
+        $sc1 = SchoolClass::create(['name' => 'Class S1-A']);
+        $sc2 = SchoolClass::create(['name' => 'Class S2-B']);
+        $sc3 = SchoolClass::create(['name' => 'Class S3-C']); // Extra buffer
 
         // 4. Courses
         $math = Course::create(['name' => 'Mathematics', 'code' => 'MATH']);
@@ -77,16 +77,13 @@ class FullCapacitySeeder extends Seeder
         // If the user wants 18 hours load, that is 18/2 = 9 slots.
         // So I should assign 9 slots per teacher.
         
-        // Teacher 1 (John): 9 slots (18h)
-        Assignment::create(['teacher_id' => $t1->id, 'course_id' => $math->id, 'school_class_id' => $sc1->id, 'hours_per_week' => 5]);
-        Assignment::create(['teacher_id' => $t1->id, 'course_id' => $math->id, 'school_class_id' => $sc2->id, 'hours_per_week' => 4]);
+        // Teacher 1 (John): 5 slots (10h)
+        Assignment::create(['teacher_id' => $t1->id, 'course_id' => $math->id, 'school_class_id' => $sc1->id, 'hours_per_week' => 10]);
 
-        // Teacher 2 (Jane): 9 slots (18h)
-        Assignment::create(['teacher_id' => $t2->id, 'course_id' => $phys->id, 'school_class_id' => $sc1->id, 'hours_per_week' => 5]);
-        Assignment::create(['teacher_id' => $t2->id, 'course_id' => $chem->id, 'school_class_id' => $sc3->id, 'hours_per_week' => 4]);
+        // Teacher 2 (Jane): 5 slots (10h)
+        Assignment::create(['teacher_id' => $t2->id, 'course_id' => $phys->id, 'school_class_id' => $sc1->id, 'hours_per_week' => 10]);
 
-        // Teacher 3 (Ali): 9 slots (18h)
-        Assignment::create(['teacher_id' => $t3->id, 'course_id' => $hist->id, 'school_class_id' => $sc2->id, 'hours_per_week' => 5]);
-        Assignment::create(['teacher_id' => $t3->id, 'course_id' => $eng->id,  'school_class_id' => $sc3->id, 'hours_per_week' => 4]);
+        // Teacher 3 (Ali): 5 slots (10h)
+        Assignment::create(['teacher_id' => $t3->id, 'course_id' => $hist->id, 'school_class_id' => $sc2->id, 'hours_per_week' => 10]);
     }
 }

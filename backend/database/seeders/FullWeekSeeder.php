@@ -13,7 +13,7 @@ class FullWeekSeeder extends Seeder
     public function run(): void
     {
         // Define days and times
-        $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+        $days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
         $times = [
             ['start' => '08:00', 'end' => '10:00'],
             ['start' => '10:00', 'end' => '12:00'],

@@ -7,7 +7,7 @@ import classeIcon from '../assets/img/icons/classe.png';
 const Classrooms = () => {
   const { t } = useTranslation();
   const [classrooms, setClassrooms] = useState([]);
-  const [formData, setFormData] = useState({ name: '', capacity: 30, type: '' });
+  const [formData, setFormData] = useState({ name: '', capacity: 24, type: '' });
   const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
@@ -31,7 +31,7 @@ const Classrooms = () => {
       } else {
         await api.post('/classrooms', formData);
       }
-      setFormData({ name: '', capacity: 30, type: '' });
+      setFormData({ name: '', capacity: 24, type: '' });
       setEditingId(null);
       fetchClassrooms();
     } catch (error) {

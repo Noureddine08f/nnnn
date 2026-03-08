@@ -6,170 +6,180 @@ use App\Models\Assignment;
 use App\Models\Classroom;
 use App\Models\Schedule;
 use App\Models\TimeSlot;
-use Illuminate\Support\Facades\DB;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class SchedulerService
 {
-    /**
-     * Generate the schedule ensuring all constraints are met.
-     * 
-     * Constraints:
-     * 1. Teacher cannot be in two places at once.
-     * 2. Class (student group) cannot be in two places at once.
-     * 3. Classroom cannot be used by two classes at once.
-     * 4. Each assignment must be scheduled for 'hours_per_week' slots.
-     * 
-     * Strategy: Randomized Greedy with Backtracking (approximated by restart/shuffle or just simple checking).
-     * We will use a randomized greedy approach:
-     * - Shuffle assignments to vary the starting point.
-     * - For each hour of an assignment, try random time slots until one fits.
-     */
     public function generate()
     {
-        // 1. Clear existing schedule
-        Schedule::truncate();
+        return DB::transaction(function () {
+            return $this->tryGenerate();
+        });
+    }
 
-        // 2. Load Data
-        $assignments = Assignment::all(); 
+    private function tryGenerate()
+    {
+        // 1. مسح الجدول القديم
+        Schedule::query()->delete();
+
+        // 2. جلب البيانات (ترتيب عشوائي للمدرسين لضمان عمل زر التوليد بشكل متجدد)
+        $assignments = Assignment::with(['teacher', 'course', 'schoolClass'])
+            ->inRandomOrder() 
+            ->get();
+
+        $classrooms = Classroom::orderBy('id')->get();
         
-        // Strategy: Randomized Greedy
-        // Shuffle assignments to avoid bias
-        $assignments = $assignments->shuffle();
+        // ترتيب الفترات الزمنية لضمان توزيعها على أيام الأسبوع
+        $timeSlots = TimeSlot::whereIn('day', ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'])
+            ->orderBy('start_time') 
+            ->orderBy('day')
+            ->get();
 
-        // FILTER: Only allow slots from Sunday to Thursday
-        $allowedDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
-        $timeSlots = TimeSlot::whereIn('day', $allowedDays)->get();
-        
-        $classrooms = Classroom::all();
-
-        if ($timeSlots->isEmpty() || $classrooms->isEmpty()) {
-            throw new Exception("No time slots or classrooms available within the allowed days (Sun-Thu).");
+        if ($timeSlots->isEmpty() || $classrooms->isEmpty() || $assignments->isEmpty()) {
+            throw new Exception("بيانات ناقصة: تأكد من وجود فترات زمنية، قاعات، وتكليفات.");
         }
 
-        // 3. In-Memory Availability Trackers
-        // Keys: [EntityID][TimeSlotID] = true (occupied)
-        $teacherOccupied = [];
-        $classOccupied = [];
-        $roomOccupied = [];
-
-        // TRACKER: Keep track of total scheduled hours for each teacher
-        // Key: [TeacherID] = Total Hours
-        $teacherScheduledHours = [];
-
-        $schedulesToInsert = [];
-        $maxHoursPerWeek = 18; // Constraint: Max 18 hours per teacher
-
+        // 3. إنشاء خزان الحصص بنظام Round-Robin (توزيع عادل للبداية)
+        $sessionPool = [];
+        $tempAssignments = [];
+        
+        // تجهيز بيانات التكليفات لتوزيعها بشكل متناوب
         foreach ($assignments as $assignment) {
-            $requiredHours = $assignment->hours_per_week;
-            $scheduledCount = 0;
-            
-            // Try to schedule each required hour
-            for ($i = 0; $i < $requiredHours; $i++) {
-                
-                // CHECK: Has this teacher reached the 18-hour limit?
-                $currentTeacherHours = $teacherScheduledHours[$assignment->teacher_id] ?? 0;
-                
-                // Assuming each slot is roughly 2 hours? Or 1 hour?
-                // The loop structure implies $assignments->hours_per_week is a COUNT of slots.
-                // However, detailed calculation requires slot duration.
-                // Let's check a sample slot duration or assume 1 unit for now if exact duration is complex to get here.
-                // BUT, to be safe, we should check the projected specific slot duration inside the loop.
-                // Optimization: Check if currently strictly >= 18.
-                if ($currentTeacherHours >= $maxHoursPerWeek) {
-                     // Skip this unit of assignment because teacher is full.
-                     // We count it as "handled" in terms of loop to avoid infinite retries, 
-                     // but we don't schedule it.
-                     continue; 
-                }
+            $requiredSessions = ceil($assignment->hours_per_week / 2);
+            $tempAssignments[] = [
+                'teacher_id'      => $assignment->teacher_id,
+                'course_id'       => $assignment->course_id,
+                'school_class_id' => $assignment->school_class_id,
+                'assignment_id'   => $assignment->id,
+                'remaining'       => $requiredSessions
+            ];
+        }
 
-                // We need to find ONE slot for this hour.
-                $shuffledSlots = $timeSlots->shuffle();
-                $slotFound = false;
-
-                foreach ($shuffledSlots as $slot) {
-                    $slotId = $slot->id;
-                    
-                    // Calculate slot duration in hours
-                    // Assuming time format "H:i:s" or "H:i"
-                    $startTime = \Carbon\Carbon::parse($slot->start_time);
-                    $endTime = \Carbon\Carbon::parse($slot->end_time);
-                    $durationInHours = $endTime->diffInHours($startTime);
-                    
-                    // CHECK: Will adding this specific slot exceed the limit?
-                    if (($currentTeacherHours + $durationInHours) > $maxHoursPerWeek) {
-                        continue; 
-                    }
-
-                    // CHECK CONFLICTS
-                    
-                    // 1. Teacher Conflict
-                    if (isset($teacherOccupied[$assignment->teacher_id][$slotId])) {
-                        continue;
-                    }
-
-                    // 2. Class Conflict
-                    if (isset($classOccupied[$assignment->school_class_id][$slotId])) {
-                        continue;
-                    }
-
-                    // 3. Find a Room
-                    $assignedRoomId = null;
-                    $shuffledRooms = $classrooms->shuffle();
-                    
-                    foreach ($shuffledRooms as $room) {
-                        if (!isset($roomOccupied[$room->id][$slotId])) {
-                            $assignedRoomId = $room->id;
-                            break;
-                        }
-                    }
-
-                    if ($assignedRoomId) {
-                        // FOUND A VALID SLOT AND ROOM
-                        
-                        // Register occupation
-                        $teacherOccupied[$assignment->teacher_id][$slotId] = true;
-                        $classOccupied[$assignment->school_class_id][$slotId] = true;
-                        $roomOccupied[$assignedRoomId][$slotId] = true;
-                        
-                        // Update Teacher Hours
-                        if (!isset($teacherScheduledHours[$assignment->teacher_id])) {
-                            $teacherScheduledHours[$assignment->teacher_id] = 0;
-                        }
-                        $teacherScheduledHours[$assignment->teacher_id] += $durationInHours;
-
-                        // Add to insert list
-                        $schedulesToInsert[] = [
-                            'teacher_id' => $assignment->teacher_id,
-                            'course_id' => $assignment->course_id,
-                            'school_class_id' => $assignment->school_class_id,
-                            'classroom_id' => $assignedRoomId,
-                            'time_slot_id' => $slotId,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ];
-
-                        $slotFound = true;
-                        $scheduledCount++;
-                        break; // Break slot loop, move to next hour
-                    }
-                }
-
-                if (!$slotFound) {
-                    // If we failed to find a slot, we just skip it.
-                    // This is "best effort" scheduling if constraints are tight.
-                    // If strict validation is needed, we would throw exception, 
-                    // but with strict limits (18h) we might intentionally skip overload.
-                    // For now, silently continue or log? The user asked to "limit" them.
+        // توزيع الحصص بنظام Round-Robin
+        $hasRemaining = true;
+        while ($hasRemaining) {
+            $hasRemaining = false;
+            foreach ($tempAssignments as &$ta) {
+                if ($ta['remaining'] > 0) {
+                    $sessionPool[] = [
+                        'teacher_id'      => $ta['teacher_id'],
+                        'course_id'       => $ta['course_id'],
+                        'school_class_id' => $ta['school_class_id'],
+                        'assignment_id'   => $ta['assignment_id']
+                    ];
+                    $ta['remaining']--;
+                    $hasRemaining = true;
                 }
             }
         }
 
-        // 4. Bulk Insert
+        // 4. مصفوفات التتبع لمنع التضارب والـ Soft Constraints
+        $teacherOccupied = []; // منع تعارض الأستاذ (Hard)
+        $classOccupied   = []; // منع تعارض القسم (Hard)
+        $roomOccupied    = []; // منع تعارض القاعة (Hard)
+        
+        $teacherDailySessions = []; // توزيع العبء اليومي للأستاذ (Hard: max 2, Soft: 2-2-2-2-1)
+        $slotUsage = []; // توازن الفترات الزمنية (Soft)
+        $classCourseDaily = []; // تفادي تكرار المادة للقسم في نفس اليوم (Soft)
+        
+        $schedulesToInsert = [];
+        $failures = [];
+
+        // 5. حلقة التوزيع الذكية (Smart Allocation with Scoring System)
+        foreach ($sessionPool as $session) {
+            $bestSlot = null;
+            $bestRoom = null;
+            $minScore = PHP_INT_MAX;
+
+            $tId = $session['teacher_id'];
+            $cId = $session['school_class_id'];
+            $courseId = $session['course_id'];
+
+            foreach ($timeSlots as $slot) {
+                $sId = $slot->id;
+                $day = $slot->day;
+
+                // قيد: منع المدرس من أخذ أكثر من حصتين في يوم واحد (Hard Constraint)
+                $dailyCount = $teacherDailySessions[$tId][$day] ?? 0;
+                if ($dailyCount >= 2) continue;
+
+                // التأكد من عدم وجود تعارض للأستاذ أو القسم في هذا الـ Slot (Hard Constraints)
+                if (isset($teacherOccupied[$sId][$tId])) continue;
+                if (isset($classOccupied[$sId][$cId])) continue;
+
+                foreach ($classrooms as $room) {
+                    $rId = $room->id;
+
+                    // التأكد من عدم وجود تعارض للقاعة (Hard Constraint)
+                    if (isset($roomOccupied[$sId][$rId])) continue;
+
+                    // --- حساب النقاط (Scoring System) ---
+                    // الهدف: أقل رقم ممڪن = أفضل اختيار
+                    $score = 0;
+
+                    // 1. توازن الفترات (Slot Balancing): نفضل الفترات الأقل استعمالاً
+                    $score += ($slotUsage[$sId] ?? 0) * 10;
+
+                    // 2. توزيع أيام الأستاذ (Day Distribution): نفضل الأيام التي فيها حصص أقل للأستاذ
+                    $score += $dailyCount * 20;
+
+                    // 3. توزيع المواد للقسم (Class Course Distribution): عقوبة كبيرة إذا كانت نفس المادة في نفس اليوم
+                    $classCourseCount = $classCourseDaily[$cId][$courseId][$day] ?? 0;
+                    $score += $classCourseCount * 50; 
+
+                    // اختيار أفضل نتيجة (Lowest Score)
+                    if ($score < $minScore) {
+                        $minScore = $score;
+                        $bestSlot = $slot;
+                        $bestRoom = $room;
+                        
+                        // إذا لقينا "Perfect Match" بـ score = 0 نقدر نخرج بكري لتسريع العملية
+                        if ($minScore === 0) break 2;
+                    }
+                }
+            }
+
+            // بعد تجربة كل الخيارات، نحجز الـ Best Match
+            if ($bestSlot && $bestRoom) {
+                $sId = $bestSlot->id;
+                $day = $bestSlot->day;
+                $rId = $bestRoom->id;
+
+                // تسجيل الحجز (Hard Constraints)
+                $teacherOccupied[$sId][$tId] = true;
+                $classOccupied[$sId][$cId]   = true;
+                $roomOccupied[$sId][$rId]    = true;
+
+                // تحديث الـ Soft Constraints
+                $slotUsage[$sId] = ($slotUsage[$sId] ?? 0) + 1;
+                $teacherDailySessions[$tId][$day] = ($teacherDailySessions[$tId][$day] ?? 0) + 1;
+                $classCourseDaily[$cId][$courseId][$day] = ($classCourseDaily[$cId][$courseId][$day] ?? 0) + 1;
+
+                $schedulesToInsert[] = [
+                    'teacher_id'      => $tId,
+                    'course_id'       => $courseId,
+                    'school_class_id' => $cId,
+                    'classroom_id'    => $rId,
+                    'time_slot_id'    => $sId,
+                    'created_at'      => now(),
+                    'updated_at'      => now(),
+                ];
+            } else {
+                $failures[] = "Could not place session for Teacher ID: {$tId}, Course ID: {$courseId}, Class ID: {$cId}";
+            }
+        }
+
+        // 6. الإدخال النهائي
         foreach (array_chunk($schedulesToInsert, 100) as $chunk) {
             Schedule::insert($chunk);
         }
 
-        return true;
+        return [
+            'status'    => empty($failures) ? 'success' : 'partial',
+            'scheduled' => count($schedulesToInsert),
+            'remaining' => count($sessionPool) - count($schedulesToInsert),
+            'issues'    => array_unique($failures)
+        ];
     }
 }

@@ -33,8 +33,8 @@ class DatabaseSeeder extends Seeder
         $t3 = Teacher::create(['name' => 'Ali Ahmed', 'specialization' => 'History', 'max_hours' => 18, 'color' => '#10b981']);
 
         // Classrooms
-        $r1 = Classroom::create(['name' => 'Room 101', 'capacity' => 30, 'type' => 'Lecture']);
-        $r2 = Classroom::create(['name' => 'Lab A', 'capacity' => 20, 'type' => 'Lab']);
+        $r1 = Classroom::create(['name' => 'Lab 1', 'capacity' => 20, 'type' => 'Lab']);
+        $r2 = Classroom::create(['name' => 'Lab 2', 'capacity' => 20, 'type' => 'Lab']);
 
         // Courses
         $c1 = Course::create(['name' => 'Mathematics', 'code' => 'MATH101']);
@@ -42,14 +42,27 @@ class DatabaseSeeder extends Seeder
         $c3 = Course::create(['name' => 'History', 'code' => 'HIST101']);
 
         // Classes
-        $sc1 = SchoolClass::create(['name' => 'Grade 10-A', 'grade_level' => '10']);
-        $sc2 = SchoolClass::create(['name' => 'Grade 11-B', 'grade_level' => '11']);
+        $sc1 = SchoolClass::create(['name' => 'DWM 1']);
+        $sc2 = SchoolClass::create(['name' => 'DWM 2']);
 
-        // TimeSlots
-        $ts1 = TimeSlot::create(['day' => 'Monday', 'start_time' => '08:00', 'end_time' => '10:00']);
-        $ts2 = TimeSlot::create(['day' => 'Monday', 'start_time' => '10:00', 'end_time' => '12:00']);
-        $ts3 = TimeSlot::create(['day' => 'Tuesday', 'start_time' => '08:00', 'end_time' => '10:00']);
-        $ts4 = TimeSlot::create(['day' => 'Tuesday', 'start_time' => '10:00', 'end_time' => '12:00']);
+        // TimeSlots (Monday to Friday, 4 slots a day)
+        $days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
+        $times = [
+            ['start' => '08:00', 'end' => '10:00'],
+            ['start' => '10:00', 'end' => '12:00'],
+            ['start' => '13:00', 'end' => '15:00'],
+            ['start' => '15:00', 'end' => '17:00'],
+        ];
+
+        foreach ($days as $day) {
+            foreach ($times as $time) {
+                TimeSlot::create([
+                    'day' => $day,
+                    'start_time' => $time['start'],
+                    'end_time' => $time['end'],
+                ]);
+            }
+        }
 
         // Assignments
         Assignment::create(['teacher_id' => $t1->id, 'course_id' => $c1->id, 'school_class_id' => $sc1->id, 'hours_per_week' => 2]);

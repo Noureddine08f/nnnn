@@ -29,7 +29,7 @@ const Login = () => {
     <div className="min-h-screen flex bg-white">
       {/* Left Side - Image/Decoration */}
       <div className="hidden lg:flex lg:w-1/2 bg-indigo-600 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-blue-800 opacity-90"></div>
+        <div className="absolute inset-0 bg-linear-to-br from-blue-400 to-blue-800 opacity-90"></div>
         
         {/* Abstract Circles */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden">

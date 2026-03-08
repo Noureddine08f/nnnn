@@ -103,7 +103,7 @@ const Settings = () => {
             type="date" 
             value={newHoliday} 
             onChange={(e) => setNewHoliday(e.target.value)} 
-            className="border rounded-lg p-2 flex-grow"
+            className="border rounded-lg p-2 grow"
           />
           <button 
             onClick={addHoliday}
