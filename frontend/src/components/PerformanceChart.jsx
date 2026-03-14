@@ -1,45 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import api from '../api';
 import { useTranslation } from 'react-i18next';
 
-const PerformanceChart = () => {
+const PerformanceChart = ({ schedules = [], loading = false }) => {
   const { t } = useTranslation();
-  const [data, setData] = useState([]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await api.get('/schedules');
-        const schedules = response.data;
+  const data = useMemo(() => {
+    if (!schedules.length) return [];
 
-        // Group by Course
-        const courseCounts = {};
-        schedules.forEach(s => {
-          const courseName = s.course?.name || 'Unknown';
-          courseCounts[courseName] = (courseCounts[courseName] || 0) + 1;
-        });
+    const courseCounts = {};
+    schedules.forEach(s => {
+      const courseName = s.course?.name || 'Unknown';
+      courseCounts[courseName] = (courseCounts[courseName] || 0) + 1;
+    });
 
-        // Convert to array and take top 7 for visual clarity
-        const chartData = Object.entries(courseCounts)
-          .map(([name, count]) => ({ name, count }))
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 7);
-
-        setData(chartData);
-      } catch (error) {
-        console.error("Error fetching data for performance chart:", error);
-      }
-    };
-
-    fetchData();
-  }, []);
+    return Object.entries(courseCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 7);
+  }, [schedules]);
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-full min-w-0">
       <h3 className="text-lg font-bold text-gray-800 mb-4">{t('Course Distribution')} <span className="text-xs font-normal text-gray-400">({t('Sessions')})</span></h3>
       <div className="h-64 w-full" style={{ minHeight: '16rem' }}>
-        {data.length > 0 && (
+        {loading ? (
+          <div className="h-full bg-gray-50 rounded-xl animate-pulse"></div>
+        ) : data.length > 0 && (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>

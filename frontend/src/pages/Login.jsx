@@ -16,8 +16,15 @@ const Login = () => {
     setIsLoading(true);
     try {
       const response = await api.post('/login', { email, password });
+      const user = response.data.user;
       localStorage.setItem('token', response.data.access_token);
-      navigate('/');
+      localStorage.setItem('user', JSON.stringify(user));
+
+      if (user.role === 'admin') {
+        navigate('/');
+      } else {
+        navigate('/schedule');
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid credentials. Please try again.');
     } finally {
@@ -30,7 +37,7 @@ const Login = () => {
       {/* Left Side - Image/Decoration */}
       <div className="hidden lg:flex lg:w-1/2 bg-indigo-600 relative overflow-hidden">
         <div className="absolute inset-0 bg-linear-to-br from-blue-400 to-blue-800 opacity-90"></div>
-        
+
         {/* Abstract Circles */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
           <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-white opacity-10 blur-3xl"></div>
@@ -39,8 +46,8 @@ const Login = () => {
 
         <div className="relative z-10 flex flex-col justify-center px-16 text-white">
           <h1 className="text-5xl font-bold mb-6 leading-tight">
-            Welcome to <br/>
-            <span className="text-indigo-200">INSFP Admin</span>
+            Welcome to <br />
+            <span className="text-neutral-800">INSFP Web Scheduler</span>
           </h1>
         </div>
       </div>
@@ -49,8 +56,8 @@ const Login = () => {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-16 bg-gray-50">
         <div className="w-full max-w-md bg-white p-10 rounded-2xl shadow-xl border border-gray-100">
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Sign In</h2>
-            <p className="text-gray-500">Access your admin dashboard</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Login</h2>
+            <p className="text-gray-500">Login Into Your Dashboard</p>
           </div>
 
           {error && (
@@ -71,7 +78,7 @@ const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all"
-                  placeholder="admin@school.com"
+                  placeholder="Enter Email"
                   required
                 />
               </div>
@@ -88,7 +95,7 @@ const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-all"
-                  placeholder="••••••••"
+                  placeholder="Enter Password"
                   required
                 />
               </div>
@@ -102,11 +109,11 @@ const Login = () => {
               {isLoading ? (
                 <>
                   <Loader2 className="animate-spin h-5 w-5 mr-2" />
-                  Signing in...
+                  Logging in...
                 </>
               ) : (
                 <>
-                  Sign In
+                  Login
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </>
               )}

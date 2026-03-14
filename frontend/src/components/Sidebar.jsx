@@ -23,11 +23,14 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
+  const initialUser = JSON.parse(localStorage.getItem('user')) || { name: 'Unknown', email: '', role: 'student' };
+  const [user] = useState(initialUser);
 
   const toggleSidebar = () => setIsOpen(!isOpen);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     navigate('/login');
   };
 
@@ -37,17 +40,19 @@ const Sidebar = () => {
     setIsLangOpen(false);
   };
 
-  const navLinks = [
-    { to: "/", label: t('Dashboard'), icon: LayoutDashboard },
-    { to: "/teachers", label: t('Teachers'), icon: Users },
-    { to: "/classrooms", label: t('Classrooms'), icon: School },
-    { to: "/courses", label: t('Courses'), icon: BookOpen },
-    { to: "/classes", label: t('Classes'), icon: Shapes },
-    { to: "/assignments", label: t('Assignments'), icon: ClipboardList },
-    { to: "/time-slots", label: t('Time Slots'), icon: Clock },
-    { to: "/schedule", label: t('Schedule'), icon: Calendar },
-    { to: "/settings", label: t('Settings'), icon: Settings },
+  const allNavLinks = [
+    { to: "/", label: t('Dashboard'), icon: LayoutDashboard, roles: ['admin'] },
+    { to: "/teachers", label: t('Teachers'), icon: Users, roles: ['admin'] },
+    { to: "/classrooms", label: t('Classrooms'), icon: School, roles: ['admin'] },
+    { to: "/courses", label: t('Courses'), icon: BookOpen, roles: ['admin'] },
+    { to: "/classes", label: t('Classes'), icon: Shapes, roles: ['admin'] },
+    { to: "/assignments", label: t('Assignments'), icon: ClipboardList, roles: ['admin'] },
+    { to: "/time-slots", label: t('Time Slots'), icon: Clock, roles: ['admin'] },
+    { to: "/schedule", label: t('Schedule'), icon: Calendar, roles: ['admin', 'teacher', 'student'] },
+    { to: "/settings", label: t('Settings'), icon: Settings, roles: ['admin'] },
   ];
+
+  const navLinks = allNavLinks.filter(link => link.roles.includes(user.role));
 
   const isActive = (path) => location.pathname === path;
 
@@ -151,12 +156,12 @@ const Sidebar = () => {
             </div>
 
             <div className="flex items-center gap-3 px-2">
-              <div className="w-8 h-8 rounded-full bg-linear-to-tr from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-xs">
-                AD
+              <div className="w-8 h-8 rounded-full bg-linear-to-tr from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-xs uppercase">
+                {user.name.substring(0, 2)}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">Admin</p>
-                <p className="text-xs text-gray-500 truncate">admin@school.com</p>
+                <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
+                <p className="text-xs text-gray-500 truncate">{user.email || user.role}</p>
               </div>
               <button
                 onClick={handleLogout}

@@ -18,27 +18,38 @@ const Dashboard = () => {
     rooms: 0,
     assignments: 0,
   });
+  const [schedules, setSchedules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    let cancelled = false;
+
+    const fetchAll = async () => {
       try {
-        const response = await api.get("/dashboard/stats");
-        setStats(response.data);
-        setLoading(false);
+        const [statsRes, schedulesRes] = await Promise.all([
+          api.get("/dashboard/stats"),
+          api.get("/schedules"),
+        ]);
+
+        if (!cancelled) {
+          setStats(statsRes.data);
+          setSchedules(schedulesRes.data);
+          setLoading(false);
+        }
       } catch (err) {
-        console.error("Error fetching dashboard stats:", err);
-        setError("Failed to load dashboard data");
-        setLoading(false);
+        console.error("Error fetching dashboard data:", err);
+        if (!cancelled) {
+          setError("Failed to load dashboard data");
+          setLoading(false);
+        }
       }
     };
 
-    fetchStats();
-  }, []);
+    fetchAll();
 
-  // Removed blocking loading check to allow parallel fetching in children
-  // if (loading) return <Spinner />
+    return () => { cancelled = true; };
+  }, []);
 
   if (error) {
     return (
@@ -50,7 +61,7 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-8">
-      
+
       {/* HEADER SECTION */}
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -74,10 +85,10 @@ const Dashboard = () => {
       {/* STATS CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {loading ? (
-           // Skeletons for Stats Cards
-           Array(4).fill(0).map((_, i) => (
-             <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 animate-pulse h-32"></div>
-           ))
+          // Skeletons for Stats Cards
+          Array(4).fill(0).map((_, i) => (
+            <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 animate-pulse h-32"></div>
+          ))
         ) : (
           <>
             <StatsCard title={t("Teachers")} value={stats.teachers} icon={<Users />} color="indigo" />
@@ -90,12 +101,12 @@ const Dashboard = () => {
 
       {/* MAIN CONTENT GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
+
         {/* LEFT COLUMN (Charts) */}
         <div className="lg:col-span-2 space-y-8">
-          <PerformanceChart />
+          <PerformanceChart schedules={schedules} loading={loading} />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <AttendanceChart />
+            <AttendanceChart schedules={schedules} loading={loading} />
             <RecentActivity />
           </div>
         </div>
@@ -107,7 +118,7 @@ const Dashboard = () => {
               <h3 className="text-lg font-bold text-gray-800">{t("Schedule")}</h3>
               <Clock size={16} className="text-gray-400" />
             </div>
-            <SchedulePreview />
+            <SchedulePreview schedules={schedules} loading={loading} />
           </div>
         </div>
 

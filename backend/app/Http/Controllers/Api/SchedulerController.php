@@ -23,11 +23,11 @@ class SchedulerController extends Controller
             $this->scheduler->generate();
             return response()->json(['message' => 'Schedule generated successfully']);
         } catch (Exception $e) {
+            \Log::error('Schedule generation failed', ['exception' => $e]);
             return response()->json([
-                'message' => 'Failed to generate schedule',
-                'error' => $e->getMessage()
-            ], 422);
-        }
+                'message' => 'Failed to generate schedule'
+            ], 500);
+        }        
     }
 
 
@@ -39,12 +39,11 @@ class SchedulerController extends Controller
             Schedule::query()->delete();
             return response()->json(['message' => 'Schedule cleared successfully']);
         } catch (Exception $e) {
+            \Log::error('Schedule clearing failed', ['exception' => $e]);
             return response()->json([
-                'message' => 'Failed to clear schedule',
-                'error' => $e->getMessage()
-        ], 500);
-        }
-    }
+                'message' => 'Failed to clear schedule'
+            ], 500);
+        }    }
 
 
 

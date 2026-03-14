@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('teachers', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('specialization')->nullable();
             $table->integer('max_hours')->default(18);
             $table->string('color')->nullable();
             $table->timestamps();

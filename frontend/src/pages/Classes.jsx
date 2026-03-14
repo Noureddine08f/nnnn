@@ -66,7 +66,7 @@ const Classes = () => {
 
       <form onSubmit={handleSubmit} className="mb-8 bg-white p-4 rounded shadow flex flex-wrap gap-4 items-end">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Name</label>
+          <label className="block text-sm font-medium text-gray-700">{t('Name')}</label>
           <input
             type="text"
             value={formData.name}
@@ -76,14 +76,13 @@ const Classes = () => {
           />
         </div>
         <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center">
-          <Plus size={16} className="mr-2" /> {editingId ? 'Update' : 'Add'}
+          <Plus size={16} className="mr-2" /> {editingId ? t('Update') : t('Add')}
         </button>
         {editingId && (
           <button type="button" onClick={() => { setEditingId(null); setFormData({ name: '' }); }} className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
-            Cancel
+            {t('Cancel')}
           </button>
-        )}
-      </form>
+        )}      </form>
 
       <div className="bg-white rounded shadow overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">

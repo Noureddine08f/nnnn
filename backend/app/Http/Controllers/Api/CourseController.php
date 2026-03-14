@@ -11,7 +11,10 @@ class CourseController extends Controller
     public function index(Request $request)
     {
         if ($request->has('limit')) {
-            return Course::latest()->take($request->limit)->get();
+            $limit = min($request->integer('limit', 10), 100);
+            if ($limit > 0) {
+                return Course::latest()->take($limit)->get();
+            }
         }
         return Course::all();
     }

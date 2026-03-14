@@ -19,6 +19,7 @@ class FullCapacitySeeder extends Seeder
     public function run(): void
     {
         Schema::disableForeignKeyConstraints();
+        User::truncate();
         Assignment::truncate();
         Teacher::truncate();
         Classroom::truncate();
@@ -27,63 +28,86 @@ class FullCapacitySeeder extends Seeder
         Schema::enableForeignKeyConstraints();
 
         // 1. Teachers (Need 18 hours each. Total 3 teachers = 54 hours load)
-        $t1 = Teacher::create(['name' => 'John Doe', 'specialization' => 'Math', 'max_hours' => 20, 'color' => '#ef4444']);
-        $t2 = Teacher::create(['name' => 'Jane Smith', 'specialization' => 'Science', 'max_hours' => 20, 'color' => '#3b82f6']);
-        $t3 = Teacher::create(['name' => 'Ali Ahmed', 'specialization' => 'History', 'max_hours' => 20, 'color' => '#10b981']);
+        $t1 = Teacher::create(['name' => 'Noureddine', 'max_hours' => 20, 'color' => '#ef4444']);
+        $t2 = Teacher::create(['name' => 'Abdelwahab', 'max_hours' => 20, 'color' => '#3b82f6']);
+        $t3 = Teacher::create(['name' => 'Abdelkader', 'max_hours' => 20, 'color' => '#10b981']);
+        $t4 = Teacher::create(['name' => 'Amel', 'max_hours' => 20, 'color' => '#10b981']);
+        $t5 = Teacher::create(['name' => 'Nadir', 'max_hours' => 20, 'color' => '#10b981']);
 
-        // 2. Classrooms (Need capacity for 54 hours. Week capacity is 5 days * 4 slots * 2h = 40h per room)
-        // So we need at least 2 rooms (80h capacity).
-        $r1 = Classroom::create(['name' => 'Room 101', 'capacity' => 30, 'type' => 'Lecture']);
-        $r2 = Classroom::create(['name' => 'Room 102', 'capacity' => 30, 'type' => 'Lecture']);
-        $r3 = Classroom::create(['name' => 'Lab A', 'capacity' => 20, 'type' => 'Lab']); // Extra buffer
+        // Create Users for Testing
+        User::create([
+            'name' => 'Admin User',
+            'email' => 'admin@institut.com',
+            'password' => bcrypt('password'),
+            'role' => 'admin'
+        ]);
+
+        User::create([
+            'name' => 'Noureddine (Teacher)',
+            'email' => 'noureddine@institut.com',
+            'password' => bcrypt('password'),
+            'role' => 'teacher',
+            'teacher_id' => $t1->id
+        ]);
+
+        User::create([
+            'name' => 'Student User',
+            'email' => 'student@institut.com',
+            'password' => bcrypt('password'),
+            'role' => 'student'
+        ]);
+
+        // 2. Classrooms (12 rooms total for scheduling flexibility)        $r1 = Classroom::create(['name' => 'Room 01', 'capacity' => 30, 'type' => 'Lecture']);
+        $r2 = Classroom::create(['name' => 'Room 02', 'capacity' => 30, 'type' => 'Lecture']);
+        $r3 = Classroom::create(['name' => 'Room 03', 'capacity' => 30, 'type' => 'Lecture']);
+        $r4 = Classroom::create(['name' => 'Room 04', 'capacity' => 30, 'type' => 'Lecture']);
+        $r5 = Classroom::create(['name' => 'Room 05', 'capacity' => 30, 'type' => 'Lecture']);
+        $r6 = Classroom::create(['name' => 'Room 06', 'capacity' => 30, 'type' => 'Lecture']);
+        $r7 = Classroom::create(['name' => 'Room 07', 'capacity' => 30, 'type' => 'Lecture']);
+        $r8 = Classroom::create(['name' => 'Lab 1', 'capacity' => 20, 'type' => 'Lab']); // Extra buffer
+        $r9 = Classroom::create(['name' => 'Lab 2', 'capacity' => 20, 'type' => 'Lab']); // Extra buffer
+        $r10 = Classroom::create(['name' => 'Lab 3', 'capacity' => 20, 'type' => 'Lab']); // Extra buffer
+        $r11 = Classroom::create(['name' => 'Lab 4', 'capacity' => 20, 'type' => 'Lab']); // Extra buffer
+        $r12 = Classroom::create(['name' => 'Lab 5', 'capacity' => 20, 'type' => 'Lab']); // Extra buffer
 
         // 3. School Classes (Groups of students). 
         // Each group also has 40h max capacity per week.
         // We need to distribute 54 hours of lessons. So we need at least 2 classes (groups).
-        $sc1 = SchoolClass::create(['name' => 'Class S1-A']);
-        $sc2 = SchoolClass::create(['name' => 'Class S2-B']);
-        $sc3 = SchoolClass::create(['name' => 'Class S3-C']); // Extra buffer
+        $sc1 = SchoolClass::create(['name' => 'WEBDEV S1']);
+        $sc2 = SchoolClass::create(['name' => 'WEBDEV S2']);
+        $sc3 = SchoolClass::create(['name' => 'WEBDEV S3']); // Extra buffer
+        $sc4 = SchoolClass::create(['name' => 'WEBDEV S4']); // Extra buffer
 
         // 4. Courses
-        $math = Course::create(['name' => 'Mathematics', 'code' => 'MATH']);
-        $phys = Course::create(['name' => 'Physics', 'code' => 'PHYS']);
-        $hist = Course::create(['name' => 'History', 'code' => 'HIST']);
-        $chem = Course::create(['name' => 'Chemistry', 'code' => 'CHEM']);
-        $bio  = Course::create(['name' => 'Biology', 'code' => 'BIO']);
-        $eng  = Course::create(['name' => 'English', 'code' => 'ENG']);
+        $c1 = Course::create(['name' => 'HTML/CSS', 'code' => 'HTML']);
+        $c2 = Course::create(['name' => 'JavaScript', 'code' => 'JS']);
+        $c3 = Course::create(['name' => 'PHP', 'code' => 'PHP']);
+        $c4 = Course::create(['name' => 'Java', 'code' => 'JAVA']);
+        $c5  = Course::create(['name' => 'Laravel', 'code' => 'LARAVEL']);
+        $c6  = Course::create(['name' => 'English', 'code' => 'ENG']);
 
         // 5. Assignments
-        // Goal: Each teacher gets 18h.
-        // Asssuming slots are 2h long? Or is hours_per_week absolute hours? 
-        // The SchedulerService logic loops `for ($i = 0; $i < $requiredHours; $i++)`.
-        // And for each iteration it assigns ONE TimeSlot.
-        // If TimeSlots are 2 hours long (8-10), then 1 "unit" of scheduling = 2 hours?
-        // Let's check SchedulerService:
-        // `for ($i = 0; $i < $requiredHours; $i++)` -> finds one slot.
-        // Effectively, `hours_per_week` in Assignment actually means "SLOTS per week" if the scheduler logic treats 1 increment as 1 slot.
-        // Wait, if `hours_per_week` is 18, does it mean 18 slots?
-        // If 1 slot = 2 hours, then 18 hours = 9 slots.
-        // BUT the SchedulerService treats `$requiredHours` as the loop count.
-        // So if I put 18, it will try to find 18 SLOTS.
-        // 18 slots * 2 hours/slot = 36 hours real time.
-        // User asked for "18h".
-        // If the user means 18 real-world hours, and slots are 2h, I should set `hours_per_week` (or rather `slots_per_week`) to 9.
-        // However, looking at the previous seeder `DatabaseSeeder`, it used `hours_per_week` => 2.
-        // And assigned it. 2 "hours" usually means 2 slots? Or 2 hours?
-        // If the logic is `for ($i = 0; $i < $requiredHours; $i++)`, then `$requiredHours` is the NUMBER OF SLOTS.
-        // Let's assume the variable name `hours_per_week` is a misnomer for `slots_per_week` OR the slots are 1 hour long.
-        // But the seeded slots are 8-10 (2 hours).
-        // If I schedule 1 slot, that is 2 hours of time.
-        // If the user wants 18 hours load, that is 18/2 = 9 slots.
-        // So I should assign 9 slots per teacher.
-        
-        // Teacher 1 (John): 5 slots (10h)
-        Assignment::create(['teacher_id' => $t1->id, 'course_id' => $math->id, 'school_class_id' => $sc1->id, 'hours_per_week' => 10]);
+        // Distribute courses across teachers and school classes.
+        // Each teacher gets ~10 hours_per_week total (slots the scheduler will assign).
 
-        // Teacher 2 (Jane): 5 slots (10h)
-        Assignment::create(['teacher_id' => $t2->id, 'course_id' => $phys->id, 'school_class_id' => $sc1->id, 'hours_per_week' => 10]);
+        // Noureddine: HTML/CSS for S1 (5h) + JavaScript for S2 (5h) = 10h
+        Assignment::create(['teacher_id' => $t1->id, 'course_id' => $c1->id, 'school_class_id' => $sc1->id, 'hours_per_week' => 5]);
+        Assignment::create(['teacher_id' => $t1->id, 'course_id' => $c2->id, 'school_class_id' => $sc2->id, 'hours_per_week' => 5]);
 
-        // Teacher 3 (Ali): 5 slots (10h)
-        Assignment::create(['teacher_id' => $t3->id, 'course_id' => $hist->id, 'school_class_id' => $sc2->id, 'hours_per_week' => 10]);
+        // Abdelwahab: PHP for S1 (5h) + Laravel for S3 (5h) = 10h
+        Assignment::create(['teacher_id' => $t2->id, 'course_id' => $c3->id, 'school_class_id' => $sc1->id, 'hours_per_week' => 5]);
+        Assignment::create(['teacher_id' => $t2->id, 'course_id' => $c5->id, 'school_class_id' => $sc3->id, 'hours_per_week' => 5]);
+
+        // Abdelkader: Java for S2 (5h) + JavaScript for S4 (5h) = 10h
+        Assignment::create(['teacher_id' => $t3->id, 'course_id' => $c4->id, 'school_class_id' => $sc2->id, 'hours_per_week' => 5]);
+        Assignment::create(['teacher_id' => $t3->id, 'course_id' => $c2->id, 'school_class_id' => $sc4->id, 'hours_per_week' => 5]);
+
+        // Amel: English for S1 (4h) + English for S3 (4h) = 8h
+        Assignment::create(['teacher_id' => $t4->id, 'course_id' => $c6->id, 'school_class_id' => $sc1->id, 'hours_per_week' => 4]);
+        Assignment::create(['teacher_id' => $t4->id, 'course_id' => $c6->id, 'school_class_id' => $sc3->id, 'hours_per_week' => 4]);
+
+        // Nadir: HTML/CSS for S3 (5h) + PHP for S4 (5h) = 10h
+        Assignment::create(['teacher_id' => $t5->id, 'course_id' => $c1->id, 'school_class_id' => $sc3->id, 'hours_per_week' => 5]);
+        Assignment::create(['teacher_id' => $t5->id, 'course_id' => $c3->id, 'school_class_id' => $sc4->id, 'hours_per_week' => 5]);
     }
 }

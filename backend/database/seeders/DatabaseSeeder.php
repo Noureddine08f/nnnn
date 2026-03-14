@@ -21,16 +21,41 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Admin',
-            'email' => 'admin@admin.com',
-            'password' => bcrypt('password'),
-        ]);
+        // Admin User
+        User::firstOrCreate(
+            ['email' => 'admin@school.com'],
+            [
+                'name' => 'Admin User',
+                'password' => bcrypt('password'),
+                'role' => 'admin'
+            ]
+        );
 
         // Teachers
-        $t1 = Teacher::create(['name' => 'John Doe', 'specialization' => 'Math', 'max_hours' => 18, 'color' => '#ef4444']);
-        $t2 = Teacher::create(['name' => 'Jane Smith', 'specialization' => 'Science', 'max_hours' => 18, 'color' => '#3b82f6']);
-        $t3 = Teacher::create(['name' => 'Ali Ahmed', 'specialization' => 'History', 'max_hours' => 18, 'color' => '#10b981']);
+        $t1 = Teacher::firstOrCreate(['name' => 'John Doe'], ['max_hours' => 18, 'color' => '#ef4444']);
+        $t2 = Teacher::firstOrCreate(['name' => 'Jane Smith'], ['max_hours' => 18, 'color' => '#3b82f6']);
+        $t3 = Teacher::firstOrCreate(['name' => 'Ali Ahmed'], ['max_hours' => 18, 'color' => '#10b981']);
+
+        // Teacher User
+        User::firstOrCreate(
+            ['email' => 'teacher@school.com'],
+            [
+                'name' => 'John Doe (Teacher)',
+                'password' => bcrypt('password'),
+                'role' => 'teacher',
+                'teacher_id' => $t1->id
+            ]
+        );
+
+        // Student User
+        User::firstOrCreate(
+            ['email' => 'student@school.com'],
+            [
+                'name' => 'Student User',
+                'password' => bcrypt('password'),
+                'role' => 'student'
+            ]
+        );
 
         // Classrooms
         $r1 = Classroom::create(['name' => 'Lab 1', 'capacity' => 20, 'type' => 'Lab']);
@@ -45,7 +70,7 @@ class DatabaseSeeder extends Seeder
         $sc1 = SchoolClass::create(['name' => 'DWM 1']);
         $sc2 = SchoolClass::create(['name' => 'DWM 2']);
 
-        // TimeSlots (Monday to Friday, 4 slots a day)
+        // TimeSlots (Sunday to Thursday, 4 slots a day)
         $days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
         $times = [
             ['start' => '08:00', 'end' => '10:00'],

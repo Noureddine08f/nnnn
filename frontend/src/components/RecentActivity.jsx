@@ -58,7 +58,8 @@ const RecentActivity = () => {
     };
 
     fetchData();
-  }, [t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const formatDate = (date) => {
     return new Intl.RelativeTimeFormat('en', { numeric: 'auto' }).format(

@@ -28,6 +28,8 @@ Route::apiResource('time-slots', TimeSlotController::class);
 // Scheduler routes — must come BEFORE the resource routes
 Route::post('/schedules/generate', [App\Http\Controllers\Api\SchedulerController::class, 'generate']);
 Route::delete('/schedules/clear', [App\Http\Controllers\Api\SchedulerController::class, 'clear']);
+Route::get('/schedules/export/excel', [App\Http\Controllers\Api\ScheduleController::class, 'exportExcel']);
+Route::get('/schedules/export/pdf', [App\Http\Controllers\Api\ScheduleController::class, 'exportPdf']);
 
 Route::apiResource('schedules', ScheduleController::class);
 Route::apiResource('assignments', AssignmentController::class);

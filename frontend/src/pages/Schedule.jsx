@@ -24,6 +24,8 @@ const { confirm } = Modal;
 
 const Schedule = () => {
   const { t } = useTranslation();
+  const user = JSON.parse(localStorage.getItem('user')) || { role: 'student' };
+  const isAdmin = user.role === 'admin';
   const [schedules, setSchedules] = useState([]);
   const [workDays, setWorkDays] = useState([
     "Sunday",
@@ -110,8 +112,50 @@ const Schedule = () => {
     });
   };
 
-  const handleExport = () => {
-    window.print();
+  const handleExportExcel = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (selectedClass) params.append("class_name", selectedClass);
+      if (selectedTeacher) params.append("teacher_name", selectedTeacher);
+
+      const response = await api.get(`/schedules/export/excel?${params.toString()}`, {
+        responseType: "blob",
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "schedule.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Error exporting Excel:", error);
+      message.error(t("Failed to export Excel"));
+    }
+  };
+
+  const handleExportPdf = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (selectedClass) params.append("class_name", selectedClass);
+      if (selectedTeacher) params.append("teacher_name", selectedTeacher);
+
+      const response = await api.get(`/schedules/export/pdf?${params.toString()}`, {
+        responseType: "blob",
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "schedule.pdf");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Error exporting PDF:", error);
+      message.error(t("Failed to export PDF"));
+    }
   };
 
   // Extract unique classes and teachers for filters
@@ -262,84 +306,97 @@ const Schedule = () => {
               {t("Schedule")}
             </h2>
             <p className="text-gray-500 text-sm">
-              View and manage weekly timetables
+              {t("View and manage weekly timetables")}
             </p>
           </div>
         </div>
         <div className="flex gap-3">
+          {isAdmin && (
+            <>
+              <Button
+                type="primary"
+                onClick={handleGenerate}
+                loading={loading}
+                icon={<RefreshCw size={16} />}
+                className="bg-green-600 hover:bg-green-700 border-none h-10"
+              >
+                {t("Generate Schedule")}
+              </Button>
+              <Button
+                danger
+                onClick={handleClear}
+                icon={<Trash2 size={16} />}
+                className="h-10"
+              >
+                {t("Clear Schedule")}
+              </Button>
+            </>
+          )}
           <Button
-            type="primary"
-            onClick={handleGenerate}
-            loading={loading}
-            icon={<RefreshCw size={16} />}
-            className="bg-green-600 hover:bg-green-700 border-none h-10"
-          >
-            {t("Generate Schedule")}
-          </Button>
-          <Button
-            danger
-            onClick={handleClear}
-            icon={<Trash2 size={16} />}
-            className="h-10"
-          >
-            {t("Clear Schedule")}
-          </Button>
-          <Button
-            onClick={handleExport}
+            onClick={handleExportExcel}
             icon={<Download size={16} />}
-            className="h-10"
+            className="h-10 bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
           >
-            Export PDF
+            {t("Excel")}
+          </Button>
+          <Button
+            onClick={handleExportPdf}
+            icon={<Download size={16} />}
+            className="h-10 bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
+          >
+            {t("PDF")}
           </Button>
         </div>
       </div>
 
-      <Card className="shadow-md rounded-xl border-0 mb-6">
-        <div className="flex flex-col md:flex-row gap-4 items-center">
-          <div className="flex items-center gap-2 text-gray-600 font-medium">
-            <Filter size={18} />
-            <span>Filters:</span>
-          </div>
-          <Select
-            placeholder="Select Class"
-            allowClear
-            className="w-full md:w-48"
-            onChange={setSelectedClass}
-            value={selectedClass}
-          >
-            {uniqueClasses.map((c) => (
-              <Option key={c} value={c}>
-                {c}
-              </Option>
-            ))}
-          </Select>
-          <Select
-            placeholder="Select Teacher"
-            allowClear
-            className="w-full md:w-48"
-            onChange={setSelectedTeacher}
-            value={selectedTeacher}
-          >
-            {uniqueTeachers.map((tc) => (
-              <Option key={tc} value={tc}>
-                {tc}
-              </Option>
-            ))}
-          </Select>
-
-          {(selectedClass || selectedTeacher) && (
-            <Button
-              type="link"
-              onClick={() => {
-                setSelectedClass(null);
-                setSelectedTeacher(null);
-              }}
+      {isAdmin && (
+        <Card className="shadow-md rounded-xl border-0 mb-6">
+          <div className="flex flex-col md:flex-row gap-4 items-center">
+            <div className="flex items-center gap-2 text-gray-600 font-medium">
+              <Filter size={18} />
+              <span>{t("Filters")}:</span>
+            </div>
+            <Select
+              placeholder={t("Select Class")}
+              allowClear
+              className="w-full md:w-48"
+              onChange={setSelectedClass}
+              value={selectedClass}
             >
-              Clear Filters
-            </Button>
-          )}
-        </div>
-      </Card>
+              {uniqueClasses.map((c) => (
+                <Option key={c} value={c}>
+                  {c}
+                </Option>
+              ))}
+            </Select>
+            <Select
+              placeholder={t("Select Teacher")}
+              allowClear
+              className="w-full md:w-48"
+              onChange={setSelectedTeacher}
+              value={selectedTeacher}
+            >
+              {uniqueTeachers.map((tc) => (
+                <Option key={tc} value={tc}>
+                  {tc}
+                </Option>
+              ))}
+            </Select>
+
+            {(selectedClass || selectedTeacher) && (
+              <Button
+                type="link"
+                onClick={() => {
+                  setSelectedClass(null);
+                  setSelectedTeacher(null);
+                }}
+              >
+                {t("Clear Filters")}
+              </Button>
+            )}
+          </div>
+        </Card>
+      )}
 
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
         {tableData.length > 0 ? (
@@ -358,8 +415,8 @@ const Schedule = () => {
               description={
                 <span className="text-gray-500">
                   {schedules.length === 0
-                    ? "No schedules found. Generate one to get started."
-                    : "No schedules match your filters."}
+                    ? t("No schedules found. Generate one to get started.")
+                    : t("No schedules match your filters.")}
                 </span>
               }
             />
